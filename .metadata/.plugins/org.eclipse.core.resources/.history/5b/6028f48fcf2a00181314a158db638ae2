@@ -1,0 +1,95 @@
+package model;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+
+public class CategoryDAO {
+	private DataSource ds;
+
+	public CategoryDAO() throws Exception {
+		Context init = new InitialContext();
+		ds = (DataSource)init.lookup("java:comp/env/jdbc/OracleDB");
+	}
+	
+	public List<Category> selectBigCateList() throws  SQLException{
+
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		StringBuffer sb = new StringBuffer();
+		
+		try{
+			sb.append("SELECT * ");
+			sb.append("FROM CATEGORY_BIG ");
+			sb.append("ORDER BY BIG_CATE_ID");
+			con = ds.getConnection();
+			pstmt = con.prepareStatement(sb.toString());
+			rs = pstmt.executeQuery();
+
+			ArrayList<Category> bigCateList = new ArrayList<Category>();
+			while(rs.next()){
+				Category bigCate = new Category();
+				bigCate.setBig_cate_id(rs.getInt("big_cate_id"));
+				bigCate.setBig_cate_name(rs.getString("big_cate_name"));
+				bigCateList.add(bigCate);
+			}
+			return bigCateList;
+		}catch(Exception e){
+			throw e;
+		}finally {
+			if ( pstmt != null ){
+				pstmt.close();
+			}			
+			if ( con != null ){
+				con.close();
+			}
+		}
+	}
+
+	public List<Category> selectSmallCateList(int big_cate_id) throws Exception{
+
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		StringBuffer sb = new StringBuffer();
+		//select * from category_small where big_cate_id=1;
+		try{
+			sb.append("SELECT * ");
+			sb.append("FROM CATEGORY_SMALL ");
+			sb.append("WHERE BIG_CATE_ID=? ");
+			sb.append("ORDER BY SMALL_CATE_ID");
+			con = ds.getConnection();
+			pstmt = con.prepareStatement(sb.toString());
+			pstmt.setInt(1, big_cate_id);
+			rs = pstmt.executeQuery();
+
+			ArrayList<Category> smallCateList = new ArrayList<Category>();
+			while(rs.next()){
+
+				Category smallCate = new Category();
+				smallCate.setBig_cate_id(big_cate_id);
+				smallCate.setSmall_cate_id(rs.getInt("small_cate_id"));
+				smallCate.setSmall_cate_name(rs.getString("small_cate_name"));
+				smallCateList.add(smallCate);
+			}
+			return smallCateList;
+		}catch(Exception e){
+			throw e;
+		}finally {
+			if ( pstmt != null ){
+				pstmt.close();
+			}			
+			if ( con != null ){
+				con.close();
+			}
+		}
+	}
+}
